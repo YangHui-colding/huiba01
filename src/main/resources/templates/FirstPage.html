@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>辉吧 - 首页</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', monospace; background: #0a0f1f; color: #e0e0ff; line-height: 1.6; }
+        .navbar { background: rgba(5,10,25,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #00aaff33; position: sticky; top: 0; z-index: 1000; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 2rem; }
+        .logo a { font-size: 1.8rem; font-weight: bold; text-decoration: none; background: linear-gradient(135deg, #00aaff, #0066cc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-links a { color: #b0c4ff; text-decoration: none; font-weight: 500; transition: 0.3s; }
+        .nav-links a:hover { color: #00aaff; text-shadow: 0 0 5px #00aaff; }
+        .search-form { flex: 1; max-width: 300px; margin: 0 1rem; }
+        .search-box { display: flex; }
+        .search-box input { width: 100%; padding: 0.5rem 1rem; background: #1a1f2f; border: 1px solid #2a3f5f; border-radius: 30px 0 0 30px; color: #fff; outline: none; }
+        .search-box button { padding: 0.5rem 1rem; background: #00aaff; border: none; border-radius: 0 30px 30px 0; color: #0a0f1f; cursor: pointer; font-weight: bold; }
+        .user-area { display: flex; align-items: center; gap: 1rem; }
+        .user-info { display: flex; align-items: center; gap: 0.5rem; }
+        .avatar { width: 32px; height: 32px; background: linear-gradient(135deg, #00aaff, #0066cc); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+        .username { font-weight: 500; }
+        .logout-btn, .login-link, .register-link { text-decoration: none; padding: 0.4rem 1rem; border-radius: 20px; transition: 0.3s; }
+        .logout-btn { background: #ff3366; color: white; }
+        .login-link { color: #00aaff; border: 1px solid #00aaff; }
+        .register-link { background: #00aaff; color: #0a0f1f; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+        .card { background: rgba(20,30,50,0.8); backdrop-filter: blur(8px); border-radius: 16px; border: 1px solid #2a3f5f; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .posts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .post-item { background: rgba(20,30,50,0.6); border-radius: 12px; padding: 1rem; border-left: 3px solid #00aaff; margin-bottom: 1rem; }
+        .post-title a { color: #00aaff; text-decoration: none; font-size: 1.2rem; font-weight: bold; }
+        .post-meta { font-size: 0.8rem; color: #88aaff; margin-top: 0.5rem; }
+        .categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+        .category-card { background: rgba(20,30,50,0.6); border-radius: 12px; padding: 1rem; text-align: center; transition: 0.3s; }
+        .category-card a { color: #00aaff; text-decoration: none; font-size: 1.1rem; font-weight: bold; }
+        .category-card:hover { transform: translateY(-3px); background: rgba(30,40,60,0.8); }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="logo"><a th:href="@{/FirstPage}">辉吧</a></div>
+        <div class="nav-links">
+            <a th:href="@{/FirstPage}">首页</a>
+            <a th:href="@{/category}">创建栏目</a>
+            <a th:href="@{/post}">发帖</a>
+        </div>
+        <div class="search-form">
+            <form th:action="@{/search}" method="get" class="search-box">
+                <input type="text" name="keyword" placeholder="搜索帖子...">
+                <button type="submit">🔍</button>
+            </form>
+        </div>
+        <div class="user-area" th:if="${session.loginUser != null}">
+            <div class="user-info">
+                <span class="avatar" th:text="${#strings.substring(session.loginUser.username, 0, 1)}">U</span>
+                <span class="username" th:text="${session.loginUser.username}">用户</span>
+            </div>
+            <a th:href="@{/user/{id}(id=${session.loginUser.id})}" class="user_profile-link"><span th:if="${unreadCount != null and unreadCount > 0}" class="red-dot">
+                    <span th:text="${unreadCount > 99 ? '99+' : unreadCount}">0</span>
+                </span>个人中心</a>
+            <a th:if="${session.loginUser.role == 'admin'}" th:href="@{/admin}" class="admin-link">管理面板</a>
+            <a th:href="@{/logout}" class="logout-btn">退出</a>
+        </div>
+        <div class="user-area" th:unless="${session.loginUser != null}">
+            <a th:href="@{/login}" class="login-link">登录</a>
+            <a th:href="@{/register}" class="register-link">注册</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card" th:if="${session.loginUser != null}">
+        <h2>欢迎回来，<span th:text="${session.loginUser.username}"></span>！</h2>
+    </div>
+
+    <div class="posts-grid">
+        <div class="card">
+            <h3>🔥 最热帖子</h3>
+            <div th:if="${hotPosts != null and !hotPosts.isEmpty()}">
+                <div th:each="post : ${hotPosts}" class="post-item">
+                    <div class="post-title"><a th:href="@{'/postdetail/' + ${post.id}}" th:text="${post.title}">标题</a></div>
+                    <div class="post-meta">👤 <span th:text="${post.user.username}">作者</span> | 👍 <span th:text="${post.likeCount}">0</span> | 💬 <span th:text="${post.commentCount}">0</span> | 👁️ <span th:text="${post.viewCount}">0</span></div>
+                </div>
+            </div>
+            <div th:if="${hotPosts == null or hotPosts.isEmpty()}"><p>暂无热门帖子</p></div>
+        </div>
+
+        <div class="card">
+            <h3>🆕 最新帖子</h3>
+            <div th:if="${newPosts != null and !newPosts.isEmpty()}">
+                <div th:each="post : ${newPosts}" class="post-item">
+                    <div class="post-title"><a th:href="@{'/postdetail/' + ${post.id}}" th:text="${post.title}">标题</a></div>
+                    <div class="post-meta">👤 <span th:text="${post.user.username}">作者</span> | 📅 <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">时间</span></div>
+                </div>
+            </div>
+            <div th:if="${newPosts == null or newPosts.isEmpty()}"><p>暂无最新帖子</p></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>📁 所有栏目</h3>
+        <div th:if="${categories != null and !categories.isEmpty()}" class="categories-grid">
+            <div th:each="cat : ${categories}" class="category-card">
+                <a th:href="@{'/categorydetail/' + ${cat.id}}" th:text="${cat.name}">栏目名</a>
+                <div style="font-size:0.8rem;" th:text="${cat.description}">描述</div>
+            </div>
+        </div>
+        <div th:if="${categories == null or categories.isEmpty()}"><p>暂无栏目，<a th:href="@{/category}">创建第一个栏目</a></p></div>
+    </div>
+</div>
+</body>
+</html>

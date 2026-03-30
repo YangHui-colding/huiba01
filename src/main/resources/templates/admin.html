@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>管理面板 - 辉吧</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', monospace; background: #0a0f1f; color: #e0e0ff; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+        .card { background: rgba(20,30,50,0.8); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #2a3f5f; padding: 0.5rem; text-align: left; }
+        th { background: #1a2a3a; }
+        button { background: #ff3366; border: none; color: white; padding: 0.2rem 0.6rem; border-radius: 4px; cursor: pointer; }
+        .delete-btn { background: #ff3366; }
+        .delete-btn:hover { background: #cc2a52; }
+        .navbar { background: rgba(5,10,25,0.95); padding: 1rem 2rem; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; gap: 2rem; }
+        .nav-links a { color: #b0c4ff; text-decoration: none; margin-right: 1rem; }
+        .logo a { color: #00aaff; font-size: 1.5rem; text-decoration: none; }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="logo"><a href="/">辉吧</a></div>
+        <div class="nav-links">
+            <a href="/FirstPage">首页</a>
+            <a href="/admin">管理面板</a>
+            <a href="/logout">退出</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card">
+        <h2>用户管理</h2>
+        <table>
+            <thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>操作</th></tr></thead>
+            <tbody>
+            <tr th:each="u : ${users}">
+                <td th:text="${u.id}">1</td>
+                <td th:text="${u.username}">user</td>
+                <td th:text="${u.role}">USER</td>
+                <td>
+                    <form th:action="@{/admin/user/delete/{id}(id=${u.id})}" method="post">
+                        <button type="submit" class="delete-btn">删除</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+            <div th:if="${error}" class="error" th:text="${error}"></div>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>帖子管理</h2>
+        <table>
+            <thead><tr><th>ID</th><th>标题</th><th>作者</th><th>操作</th></tr></thead>
+            <tbody>
+            <tr th:each="p : ${posts}">
+                <td th:text="${p.id}">1</td>
+                <td><a th:href="@{'/postdetail/' + ${p.id}}" th:text="${p.title}">标题</a></td>
+                <td th:text="${p.user.username}">作者</td>
+                <td>
+                    <form th:action="@{/admin/post/delete/{id}(id=${p.id})}" method="post">
+                        <button type="submit">删除</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+            <div th:if="${error}" class="error" th:text="${error}"></div>
+        </table>
+    </div>
+    <div class="card">
+    <h2>栏目管理</h2>
+    <table>
+        <thead><tr><th>ID</th><th>标题</th><th>描述</th><th>操作</th></tr></thead>
+        <tbody>
+        <tr th:each="c : ${category}">
+            <td th:text="${c.id}">1</td>
+            <td><a th:href="@{'/categorydetail/' + ${c.id}}" th:text="${c.name}">标题</a></td>
+            <td th:text="${c.description}">描述</td>
+            <td>
+                <form th:action="@{/admin/category/delete/{id}(id=${c.id})}" method="post">
+                    <button type="submit">删除</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+        <div th:if="${error}" class="error" th:text="${error}"></div>
+    </table>
+</div>
+    <div class="card">
+        <h2>评论管理</h2>
+        <table>
+            <thead><tr><th>ID</th><th>内容</th><th>作者</th><th>所属帖子</th><th>操作</th></tr></thead>
+            <tbody>
+            <tr th:each="c : ${comments}">
+                <td th:text="${c.id}">1</td>
+                <td th:text="${c.content}">评论</td>
+                <td th:text="${c.user.username}">作者</td>
+                <td><a th:href="@{'/postdetail/' + ${c.post.id}}" th:text="${c.post.title}">帖子</a></td>
+                <td>
+                    <form th:action="@{/admin/comment/delete/{id}(id=${c.id})}" method="post">
+                        <button type="submit">删除</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+            <div th:if="${error}" class="error" th:text="${error}"></div>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>

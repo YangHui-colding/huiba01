@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${user.username} + '的个人中心 - 辉吧'">个人中心</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', monospace; background: #0a0f1f; color: #e0e0ff; line-height: 1.6; }
+        .navbar { background: rgba(5,10,25,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #00aaff33; position: sticky; top: 0; z-index: 1000; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 2rem; }
+        .logo a { font-size: 1.8rem; font-weight: bold; text-decoration: none; background: linear-gradient(135deg, #00aaff, #0066cc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-links a { color: #b0c4ff; text-decoration: none; font-weight: 500; transition: 0.3s; }
+        .nav-links a:hover { color: #00aaff; text-shadow: 0 0 5px #00aaff; }
+        .search-form { flex: 1; max-width: 300px; margin: 0 1rem; }
+        .search-box { display: flex; }
+        .search-box input { width: 100%; padding: 0.5rem 1rem; background: #1a1f2f; border: 1px solid #2a3f5f; border-radius: 30px 0 0 30px; color: #fff; outline: none; }
+        .search-box button { padding: 0.5rem 1rem; background: #00aaff; border: none; border-radius: 0 30px 30px 0; color: #0a0f1f; cursor: pointer; font-weight: bold; }
+        .user-area { display: flex; align-items: center; gap: 1rem; }
+        .user-info { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+        .avatar-small { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: linear-gradient(135deg, #00aaff, #0066cc); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+        .username { font-weight: 500; }
+        .logout-btn, .login-link, .register-link { text-decoration: none; padding: 0.4rem 1rem; border-radius: 20px; transition: 0.3s; }
+        .logout-btn { background: #ff3366; color: white; }
+        .login-link { color: #00aaff; border: 1px solid #00aaff; }
+        .register-link { background: #00aaff; color: #0a0f1f; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 2rem; display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+        .card { background: rgba(20,30,50,0.8); backdrop-filter: blur(8px); border-radius: 16px; border: 1px solid #2a3f5f; padding: 1.5rem; }
+        .profile-header { text-align: center; }
+        .avatar-large { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 2px solid #00aaff; }
+        .avatar-placeholder { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #00aaff, #0066cc); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: bold; color: white; margin: 0 auto 1rem; }
+        .edit-btn { background: #00aaff; color: #0a0f1f; border: none; padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; margin-top: 1rem; }
+        .info-item { margin: 1rem 0; padding: 0.5rem; border-bottom: 1px solid #2a3f5f; }
+        .info-label { color: #88aaff; width: 80px; display: inline-block; }
+        .notice-item { padding: 1rem; border-bottom: 1px solid #2a3f5f; cursor: pointer; transition: 0.2s; }
+        .notice-item:hover { background: rgba(0,170,255,0.1); }
+        .notice-unread { background: rgba(0,170,255,0.2); border-left: 3px solid #00aaff; }
+        .notice-time { font-size: 0.75rem; color: #88aaff; margin-top: 0.5rem; }
+        .post-item { padding: 1rem; border-bottom: 1px solid #2a3f5f; }
+        .post-item a { color: #00aaff; text-decoration: none; }
+        .empty-msg { text-align: center; color: #88aaff; padding: 2rem; }
+        button { background: #00aaff; border: none; color: #0a0f1f; padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; }
+        input[type=file] { background: #1a1f2f; border: 1px solid #2a3f5f; padding: 0.5rem; border-radius: 8px; color: #fff; width: 100%; margin-bottom: 1rem; }
+        .hidden { display: none; }
+        .tab-buttons { display: flex; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid #2a3f5f; padding-bottom: 0.5rem; }
+        .tab-btn { background: none; border: none; color: #88aaff; cursor: pointer; padding: 0.5rem 1rem; }
+        .tab-btn.active { color: #00aaff; border-bottom: 2px solid #00aaff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="logo"><a th:href="@{/FirstPage}">辉吧</a></div>
+        <div class="nav-links">
+            <a th:href="@{/FirstPage}">首页</a>
+            <a th:href="@{/category}">创建栏目</a>
+            <a th:href="@{/post}">发帖</a>
+        </div>
+        <div class="search-form">
+            <form th:action="@{/search}" method="get" class="search-box">
+                <input type="text" name="keyword" placeholder="搜索帖子...">
+                <button type="submit">🔍</button>
+            </form>
+        </div>
+        <div class="user-area" th:if="${session.loginUser != null}">
+            <a th:href="@{/user/{id}(id=${session.loginUser.id})}" class="user-info" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit; position: relative;">
+                <img th:if="${session.loginUser.avatarUrl != null}" th:src="@{${session.loginUser.avatarUrl}}" class="avatar-small">
+                <span th:unless="${session.loginUser.avatarUrl != null}" class="avatar-small" th:text="${#strings.substring(session.loginUser.username, 0, 1)}">U</span>
+                <span class="username" th:text="${session.loginUser.username}">用户</span>
+
+                <!-- 红点 -->
+                <span th:if="${unreadCount != null and unreadCount > 0}"
+                      style="position: absolute; top: -5px; right: -10px; background: #ff3366; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; text-align: center; padding: 0 4px; line-height: 18px;">
+        <span th:text="${unreadCount > 99 ? '99+' : unreadCount}">0</span>
+    </span>
+            </a>
+            </div>
+            <a th:href="@{/logout}" class="logout-btn">退出</a>
+        </div>
+        <div class="user-area" th:unless="${session.loginUser != null}">
+            <a th:href="@{/login}" class="login-link">登录</a>
+            <a th:href="@{/register}" class="register-link">注册</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- 左侧：个人信息 -->
+    <div class="card">
+        <div class="profile-header">
+            <div th:if="${user.avatarUrl != null}">
+                <img class="avatar-large" th:src="@{${user.avatarUrl}}" alt="头像">
+            </div>
+            <div th:unless="${user.avatarUrl != null}" class="avatar-placeholder">
+                <span th:text="${#strings.substring(user.username, 0, 1)}">U</span>
+            </div>
+            <h2 th:text="${user.username}">用户名</h2>
+            <p th:if="${user.role == 'admin'}" style="color:#00aaff;">管理员</p>
+            <button class="edit-btn" th:if="${session.loginUser != null and session.loginUser.id == user.id}" onclick="toggleAvatarForm()">修改头像</button>
+        </div>
+
+        <div id="avatarForm" class="hidden" style="margin-top: 1rem;">
+            <form th:action="@{/user/avatar}" method="post" enctype="multipart/form-data">
+                <input type="file" name="avatar" accept="image/*" required>
+                <input type="hidden" name="userId" th:value="${user.id}">
+                <button type="submit">上传新头像</button>
+            </form>
+        </div>
+
+<!--        <div class="info-item">-->
+<!--            <span class="info-label">注册时间：</span>-->
+<!--            <span th:text="${#temporals.format(user.createAt, 'yyyy-MM-dd HH:mm')}">时间</span>-->
+<!--        </div>-->
+        <div class="info-item">
+            <span class="info-label">帖子数：</span>
+            <span th:text="${userPosts != null ? userPosts.size() : 0}">0</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">评论数：</span>
+            <span th:text="${userComments != null ? userComments.size() : 0}">0</span>
+        </div>
+    </div>
+
+    <!-- 右侧：通知 + 我的帖子（Tab切换）-->
+    <div class="card">
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab('notices')">📢 通知</button>
+            <button class="tab-btn" onclick="switchTab('posts')">📝 我的帖子</button>
+        </div>
+
+        <!-- 通知列表（添加 tab-content） -->
+        <div id="noticesTab" class="tab-content active">
+            <div th:if="${notices != null and !notices.isEmpty()}">
+                <a th:each="notice : ${notices}"
+                   th:href="${notice.link}"
+                   class="notice-item"
+                   th:classappend="${notice.readread ? '' : 'notice-unread'}"
+                   style="display: block; text-decoration: none; color: inherit;">
+                    <div th:text="${notice.content}">通知内容</div>
+                    <div class="notice-time" th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd HH:mm')}">时间</div>
+                </a>
+            </div>
+            <div th:if="${notices == null or notices.isEmpty()}" class="empty-msg">
+                暂无通知
+            </div>
+        </div>
+
+        <!-- 我的帖子列表 -->
+        <div id="postsTab" class="tab-content">
+            <div th:if="${userPosts != null and !userPosts.isEmpty()}">
+                <div th:each="post : ${userPosts}" class="post-item">
+                    <a th:href="@{'/postdetail/' + ${post.id}}" th:text="${post.title}">帖子标题</a>
+                    <div class="notice-time">
+                        发布于 <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">时间</span>
+                        | 点赞 <span th:text="${post.likeCount}">0</span>
+                        | 评论 <span th:text="${post.commentCount}">0</span>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${userPosts == null or userPosts.isEmpty()}" class="empty-msg">
+                还没有发布过帖子
+            </div>
+        </div>
+    </div>
+
+<script>
+    function toggleAvatarForm() {
+        document.getElementById('avatarForm').classList.toggle('hidden');
+    }
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tab + 'Tab').classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+</body>
+</html>

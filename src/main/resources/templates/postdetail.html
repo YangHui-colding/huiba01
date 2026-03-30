@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${post.title} + ' - 辉吧'">帖子详情</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', monospace; background: #0a0f1f; color: #e0e0ff; line-height: 1.6; }
+        .navbar { background: rgba(5,10,25,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #00aaff33; position: sticky; top: 0; z-index: 1000; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 2rem; }
+        .logo a { font-size: 1.8rem; font-weight: bold; text-decoration: none; background: linear-gradient(135deg, #00aaff, #0066cc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-links a { color: #b0c4ff; text-decoration: none; font-weight: 500; transition: 0.3s; }
+        .nav-links a:hover { color: #00aaff; text-shadow: 0 0 5px #00aaff; }
+        .search-form { flex: 1; max-width: 300px; margin: 0 1rem; }
+        .search-box { display: flex; }
+        .search-box input { width: 100%; padding: 0.5rem 1rem; background: #1a1f2f; border: 1px solid #2a3f5f; border-radius: 30px 0 0 30px; color: #fff; outline: none; }
+        .search-box button { padding: 0.5rem 1rem; background: #00aaff; border: none; border-radius: 0 30px 30px 0; color: #0a0f1f; cursor: pointer; font-weight: bold; }
+        .user-area { display: flex; align-items: center; gap: 1rem; }
+        .user-info { display: flex; align-items: center; gap: 0.5rem; }
+        .avatar { width: 32px; height: 32px; background: linear-gradient(135deg, #00aaff, #0066cc); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+        .username { font-weight: 500; }
+        .logout-btn, .login-link, .register-link { text-decoration: none; padding: 0.4rem 1rem; border-radius: 20px; transition: 0.3s; }
+        .logout-btn { background: #ff3366; color: white; }
+        .login-link { color: #00aaff; border: 1px solid #00aaff; }
+        .register-link { background: #00aaff; color: #0a0f1f; }
+        .admin-link { background: #ff6600; color: white; text-decoration: none; padding: 0.4rem 1rem; border-radius: 20px; }
+        .container { max-width: 800px; margin: 2rem auto; padding: 0 2rem; }
+        .card { background: rgba(20,30,50,0.8); backdrop-filter: blur(8px); border-radius: 16px; border: 1px solid #2a3f5f; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .post-title { font-size: 2rem; color: #00aaff; margin-bottom: 1rem; }
+        .post-meta { color: #88aaff; font-size: 0.9rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #2a3f5f; }
+        .post-content { background: #0f1422; padding: 1.5rem; border-radius: 12px; line-height: 1.8; white-space: pre-wrap; margin: 1rem 0; }
+
+        /* 评论样式 */
+        .comment-item { margin-bottom: 1rem; padding: 1rem; background: rgba(20,30,50,0.5); border-radius: 12px; }
+        .comment-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+        .comment-author { color: #00aaff; font-weight: bold; }
+        .comment-time { color: #88aaff; font-size: 0.75rem; }
+        .reply-btn, .show-replies-btn { background: none; border: none; color: #88aaff; cursor: pointer; font-size: 0.75rem; padding: 0.2rem 0.5rem; }
+        .reply-btn:hover, .show-replies-btn:hover { color: #00aaff; }
+        .comment-content { margin-bottom: 0.5rem; }
+
+        /* 楼中楼样式 */
+        .replies-section { margin-left: 2rem; margin-top: 0.75rem; padding-left: 1rem; border-left: 2px solid #00aaff; }
+        .reply-item { margin-top: 0.75rem; padding: 0.75rem; background: rgba(20,30,50,0.3); border-radius: 8px; }
+        .reply-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+        .reply-author { color: #00aaff; font-size: 0.85rem; }
+        .reply-time { color: #88aaff; font-size: 0.7rem; }
+        .reply-content { font-size: 0.9rem; }
+
+        .reply-form { margin-top: 0.5rem; display: none; }
+        .reply-form textarea { font-size: 0.85rem; padding: 0.4rem 0.8rem; margin-bottom: 0.5rem; }
+        .reply-form button { font-size: 0.75rem; padding: 0.3rem 0.8rem; }
+
+        button { background: #00aaff; border: none; color: #0a0f1f; padding: 0.6rem 1.2rem; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #0088cc; box-shadow: 0 0 10px #00aaff; }
+        textarea { background: #1a1f2f; border: 1px solid #2a3f5f; padding: 0.6rem 1rem; border-radius: 8px; color: #fff; width: 100%; margin-bottom: 1rem; resize: vertical; }
+        textarea:focus { outline: none; border-color: #00aaff; }
+        .error { color: #ff6666; background: #ff000020; padding: 0.5rem; border-radius: 8px; margin-bottom: 1rem; }
+        .success { color: #66ff66; background: #00ff0020; padding: 0.5rem; border-radius: 8px; margin-bottom: 1rem; }
+        .login-prompt { text-align: center; padding: 1rem; background: rgba(20,30,50,0.5); border-radius: 12px; }
+        .login-prompt a { color: #00aaff; text-decoration: none; }
+        .like-btn { margin-top: 1rem; }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="logo"><a th:href="@{/FirstPage}">辉吧</a></div>
+        <div class="nav-links">
+            <a th:href="@{/FirstPage}">首页</a>
+            <a th:href="@{/category}">创建栏目</a>
+            <a th:href="@{/post}">发帖</a>
+        </div>
+        <div class="search-form">
+            <form th:action="@{/search}" method="get" class="search-box">
+                <input type="text" name="keyword" placeholder="搜索帖子...">
+                <button type="submit">🔍</button>
+            </form>
+        </div>
+        <div class="user-area" th:if="${session.loginUser != null}">
+            <div class="user-info">
+                <span class="avatar" th:text="${#strings.substring(session.loginUser.username, 0, 1)}">U</span>
+                <span class="username" th:text="${session.loginUser.username}">用户</span>
+            </div>
+            <a th:if="${session.loginUser.role == 'admin'}" th:href="@{/admin}" class="admin-link">管理面板</a>
+            <a th:href="@{/logout}" class="logout-btn">退出</a>
+        </div>
+        <div class="user-area" th:unless="${session.loginUser != null}">
+            <a th:href="@{/login}" class="login-link">登录</a>
+            <a th:href="@{/register}" class="register-link">注册</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- 帖子主体 -->
+    <div class="card">
+        <h1 class="post-title" th:text="${post.title}">帖子标题</h1>
+        <div class="post-meta">
+            作者：<a th:href="@{'/user/' + ${post.user.id}}" th:text="${post.user.username}" style="color:#00aaff;">作者</a> |
+            发布于：<span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">时间</span> |
+            浏览：<span th:text="${post.viewCount}">0</span> |
+            点赞：<span th:text="${post.likeCount}">0</span> |
+            评论：<span th:text="${post.commentCount}">0</span>
+        </div>
+        <div class="post-content" th:utext="${post.contentHtml}">帖子内容</div>
+        <button class="like-btn" th:data-id="${post.id}">👍 点赞 <span th:text="${post.likeCount}">0</span></button>
+    </div>
+
+    <!-- 评论区域 -->
+    <div class="card">
+        <h3>评论 (<span th:text="${#lists.size(comments)}">0</span>)</h3>
+
+        <!-- 评论列表（树形结构） -->
+        <div th:if="${comments != null and !comments.isEmpty()}">
+            <div th:each="comment : ${comments}" class="comment-item" th:data-id="${comment.id}">
+                <div class="comment-header">
+                    <span class="comment-author" th:text="${comment.user.username}">用户</span>
+                    <span class="comment-time" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">时间</span>
+                    <button class="reply-btn" th:data-id="${comment.id}">回复</button>
+                    <button th:if="${comment.replies != null and !comment.replies.isEmpty()}"
+                            class="show-replies-btn"
+                            th:data-id="${comment.id}">📌 查看回复 (<span th:text="${comment.replies.size()}">0</span>)</button>
+                </div>
+                <div class="comment-content" th:text="${comment.content}">评论内容</div>
+
+                <!-- 子回复列表（楼中楼）初始隐藏 -->
+                <div th:if="${comment.replies != null and !comment.replies.isEmpty()}"
+                     class="replies-section"
+                     th:id="'replies-' + ${comment.id}"
+                     style="display: none;">
+                    <div th:each="reply : ${comment.replies}" class="reply-item">
+                        <div class="reply-header">
+                            <span class="reply-author" th:text="${reply.user.username}">用户</span>
+                            <span class="reply-time" th:text="${#temporals.format(reply.createdAt, 'yyyy-MM-dd HH:mm')}">时间</span>
+                            <button class="reply-btn" th:data-parent-id="${comment.id}" th:data-reply-to="${reply.user.username}" style="font-size: 0.7rem;">回复</button>
+                        </div>
+                        <div class="reply-content" th:text="${reply.content}">回复内容</div>
+                    </div>
+                </div>
+
+                <!-- 回复表单（隐藏） -->
+                <div class="reply-form" th:id="'reply-form-' + ${comment.id}">
+                    <form th:action="@{'/post/' + ${post.id} + '/comment'}" method="post">
+                        <input type="hidden" name="parentId" th:value="${comment.id}">
+                        <textarea name="content" rows="2" placeholder="回复 @${comment.user.username}..."></textarea>
+                        <button type="submit">发表回复</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div th:if="${comments == null or comments.isEmpty()}">
+            <p style="color:#88aaff; text-align:center;">暂无评论，快来抢沙发！</p>
+        </div>
+
+        <!-- 发表顶级评论表单 -->
+        <div th:if="${session.loginUser != null}" style="margin-top: 1.5rem;">
+            <h4>发表评论</h4>
+            <form th:action="@{'/post/' + ${post.id} + '/comment'}" method="post">
+                <textarea name="content" rows="3" required placeholder="写下你的评论..."></textarea>
+                <button type="submit">发表评论</button>
+            </form>
+        </div>
+        <div th:unless="${session.loginUser != null}" class="login-prompt">
+            <a th:href="@{/login}">登录</a> 后可以发表评论
+        </div>
+        <div th:if="${error}" class="error" th:text="${error}"></div>
+        <div th:if="${success}" class="success" th:text="${success}"></div>
+    </div>
+</div>
+
+<script>
+    // 点赞功能
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            fetch(`/post/${id}/like`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const span = btn.querySelector('span');
+                        if (span) span.innerText = data.likeCount;
+                        btn.style.transform = 'scale(1.1)';
+                        setTimeout(() => btn.style.transform = '', 200);
+                    } else {
+                        alert(data.message || '点赞失败');
+                    }
+                })
+                .catch(err => console.error('点赞错误:', err));
+        });
+    });
+
+    // 回复按钮 - 显示回复表单
+    document.querySelectorAll('.reply-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const commentId = this.getAttribute('data-id') || this.getAttribute('data-parent-id');
+            const form = document.getElementById('reply-form-' + commentId);
+            if (form) {
+                // 隐藏其他所有回复表单
+                document.querySelectorAll('.reply-form').forEach(f => {
+                    if (f.id !== 'reply-form-' + commentId) {
+                        f.style.display = 'none';
+                    }
+                });
+                form.style.display = form.style.display === 'none' ? 'block' : 'none';
+
+                // 如果有被回复的用户名，设置 placeholder
+                const replyTo = this.getAttribute('data-reply-to');
+                if (replyTo && form.querySelector('textarea')) {
+                    form.querySelector('textarea').placeholder = '回复 @' + replyTo + '...';
+                } else {
+                    form.querySelector('textarea').placeholder = '回复...';
+                }
+            }
+        });
+    });
+
+    // 查看回复按钮 - 切换显示楼中楼
+    document.querySelectorAll('.show-replies-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const commentId = this.getAttribute('data-id');
+            const repliesDiv = document.getElementById('replies-' + commentId);
+            if (repliesDiv) {
+                if (repliesDiv.style.display === 'none') {
+                    repliesDiv.style.display = 'block';
+                    this.innerHTML = '📌 收起回复 (<span th:text="${comment.replies.size()}">0</span>)';
+                } else {
+                    repliesDiv.style.display = 'none';
+                    this.innerHTML = '📌 查看回复 (<span th:text="${comment.replies.size()}">0</span>)';
+                }
+            }
+        });
+    });
+
+    // 点击其他地方关闭回复表单
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.reply-btn') && !e.target.closest('.reply-form')) {
+            document.querySelectorAll('.reply-form').forEach(form => {
+                form.style.display = 'none';
+            });
+        }
+    });
+</script>
+</body>
+</html>

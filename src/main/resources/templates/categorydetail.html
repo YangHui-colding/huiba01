@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${category.name} + ' - 辉吧'">栏目详情</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', monospace; background: #0a0f1f; color: #e0e0ff; line-height: 1.6; }
+        .navbar { background: rgba(5,10,25,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #00aaff33; position: sticky; top: 0; z-index: 1000; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 2rem; }
+        .logo a { font-size: 1.8rem; font-weight: bold; text-decoration: none; background: linear-gradient(135deg, #00aaff, #0066cc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-links a { color: #b0c4ff; text-decoration: none; font-weight: 500; transition: 0.3s; }
+        .nav-links a:hover { color: #00aaff; text-shadow: 0 0 5px #00aaff; }
+        .search-form { flex: 1; max-width: 300px; margin: 0 1rem; }
+        .search-box { display: flex; }
+        .search-box input { width: 100%; padding: 0.5rem 1rem; background: #1a1f2f; border: 1px solid #2a3f5f; border-radius: 30px 0 0 30px; color: #fff; outline: none; }
+        .search-box button { padding: 0.5rem 1rem; background: #00aaff; border: none; border-radius: 0 30px 30px 0; color: #0a0f1f; cursor: pointer; font-weight: bold; }
+        .user-area { display: flex; align-items: center; gap: 1rem; }
+        .user-info { display: flex; align-items: center; gap: 0.5rem; }
+        .avatar { width: 32px; height: 32px; background: linear-gradient(135deg, #00aaff, #0066cc); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+        .username { font-weight: 500; }
+        .logout-btn, .login-link, .register-link { text-decoration: none; padding: 0.4rem 1rem; border-radius: 20px; transition: 0.3s; }
+        .logout-btn { background: #ff3366; color: white; }
+        .login-link { color: #00aaff; border: 1px solid #00aaff; }
+        .register-link { background: #00aaff; color: #0a0f1f; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 2rem; }
+        .card { background: rgba(20,30,50,0.8); backdrop-filter: blur(8px); border-radius: 16px; border: 1px solid #2a3f5f; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .post-item { background: rgba(20,30,50,0.6); border-radius: 12px; padding: 1rem; border-left: 3px solid #00aaff; margin-bottom: 1rem; }
+        .post-title a { color: #00aaff; text-decoration: none; font-size: 1.2rem; font-weight: bold; }
+        .post-meta { font-size: 0.8rem; color: #88aaff; margin-top: 0.5rem; }
+        .pagination { margin-top: 2rem; display: flex; gap: 0.5rem; justify-content: center; }
+        .pagination a, .pagination span { padding: 0.5rem 0.8rem; background: #1a1f2f; border-radius: 8px; text-decoration: none; color: #00aaff; }
+        .current-page { background: #00aaff; color: #0a0f1f; }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="logo"><a th:href="@{/FirstPage}">辉吧</a></div>
+        <div class="nav-links">
+            <a th:href="@{/FirstPage}">首页</a>
+            <a th:href="@{/category}">创建栏目</a>
+            <a th:href="@{/post}">发帖</a>
+        </div>
+        <div class="search-form">
+            <form th:action="@{/search}" method="get" class="search-box">
+                <input type="text" name="keyword" placeholder="搜索帖子...">
+                <button type="submit">🔍</button>
+            </form>
+        </div>
+        <div class="user-area" th:if="${session.loginUser != null}">
+            <div class="user-info">
+                <span class="avatar" th:text="${#strings.substring(session.loginUser.username, 0, 1)}">U</span>
+                <span class="username" th:text="${session.loginUser.username}">用户</span>
+            </div>
+            <a th:if="${session.loginUser.role == 'admin'}" th:href="@{/admin}" class="admin-link">管理面板</a>
+            <a th:href="@{/logout}" class="logout-btn">退出</a>
+        </div>
+        <div class="user-area" th:unless="${session.loginUser != null}">
+            <a th:href="@{/login}" class="login-link">登录</a>
+            <a th:href="@{/register}" class="register-link">注册</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card">
+        <h1 th:text="${category.name}">栏目名</h1>
+        <p th:text="${category.description}">描述</p>
+    </div>
+
+    <div class="card">
+        <h3>帖子列表</h3>
+        <div th:if="${posts != null and !posts.isEmpty()}">
+            <div th:each="post : ${posts}" class="post-item">
+                <div class="post-title"><a th:href="@{'/postdetail/' + ${post.id}}" th:text="${post.title}">标题</a></div>
+                <div class="post-meta">作者：<span th:text="${post.user.username}">作者</span> | 时间：<span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">时间</span> | 点赞：<span th:text="${post.likeCount}">0</span> | 评论：<span th:text="${post.commentCount}">0</span></div>
+            </div>
+        </div>
+        <div th:if="${posts == null or posts.isEmpty()}"><p>暂无帖子，<a th:href="@{/post}">发布第一个帖子</a></p></div>
+
+        <div th:if="${totalPages != null and totalPages > 1}" class="pagination">
+            <a th:if="${currentPage > 0}" th:href="@{/categorydetail/{id}(id=${category.id}, page=${currentPage - 1}, size=${size})}">上一页</a>
+            <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                <a th:if="${i != currentPage}" th:href="@{/categorydetail/{id}(id=${category.id}, page=${i}, size=${size})}" th:text="${i+1}"></a>
+                <span th:if="${i == currentPage}" th:text="${i+1}" class="current-page"></span>
+            </span>
+            <a th:if="${currentPage + 1 < totalPages}" th:href="@{/categorydetail/{id}(id=${category.id}, page=${currentPage + 1}, size=${size})}">下一页</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

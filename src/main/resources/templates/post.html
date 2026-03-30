@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>发布新帖 - 辉吧</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', monospace; background: #0a0f1f; color: #e0e0ff; line-height: 1.6; }
+        .navbar { background: rgba(5,10,25,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #00aaff33; position: sticky; top: 0; z-index: 1000; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 2rem; }
+        .logo a { font-size: 1.8rem; font-weight: bold; text-decoration: none; background: linear-gradient(135deg, #00aaff, #0066cc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-links a { color: #b0c4ff; text-decoration: none; font-weight: 500; transition: 0.3s; }
+        .nav-links a:hover { color: #00aaff; text-shadow: 0 0 5px #00aaff; }
+        .search-form { flex: 1; max-width: 300px; margin: 0 1rem; }
+        .search-box { display: flex; }
+        .search-box input { width: 100%; padding: 0.5rem 1rem; background: #1a1f2f; border: 1px solid #2a3f5f; border-radius: 30px 0 0 30px; color: #fff; outline: none; }
+        .search-box button { padding: 0.5rem 1rem; background: #00aaff; border: none; border-radius: 0 30px 30px 0; color: #0a0f1f; cursor: pointer; font-weight: bold; }
+        .user-area { display: flex; align-items: center; gap: 1rem; }
+        .user-info { display: flex; align-items: center; gap: 0.5rem; }
+        .avatar { width: 32px; height: 32px; background: linear-gradient(135deg, #00aaff, #0066cc); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+        .username { font-weight: 500; }
+        .logout-btn, .login-link, .register-link { text-decoration: none; padding: 0.4rem 1rem; border-radius: 20px; transition: 0.3s; }
+        .logout-btn { background: #ff3366; color: white; }
+        .login-link { color: #00aaff; border: 1px solid #00aaff; }
+        .register-link { background: #00aaff; color: #0a0f1f; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+        .card { background: rgba(20,30,50,0.8); backdrop-filter: blur(8px); border-radius: 16px; border: 1px solid #2a3f5f; padding: 1.5rem; margin-bottom: 1.5rem; }
+        button { background: #00aaff; border: none; color: #0a0f1f; padding: 0.6rem 1.2rem; border-radius: 30px; cursor: pointer; font-weight: bold; }
+        input, textarea, select { background: #1a1f2f; border: 1px solid #2a3f5f; padding: 0.6rem 1rem; border-radius: 8px; color: #fff; width: 100%; margin-bottom: 1rem; }
+        .post-form { max-width: 800px; margin: 0 auto; }
+        .error { color: #ff6666; background: #ff000020; padding: 0.5rem; border-radius: 8px; margin-bottom: 1rem; }
+        .success { color: #66ff66; background: #00ff0020; padding: 0.5rem; border-radius: 8px; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="logo"><a th:href="@{/FirstPage}">辉吧</a></div>
+        <div class="nav-links">
+            <a th:href="@{/FirstPage}">首页</a>
+            <a th:href="@{/category}">创建栏目</a>
+            <a th:href="@{/post}">发帖</a>
+        </div>
+        <div class="search-form">
+            <form th:action="@{/search}" method="get" class="search-box">
+                <input type="text" name="keyword" placeholder="搜索帖子...">
+                <button type="submit">🔍</button>
+            </form>
+        </div>
+        <div class="user-area" th:if="${session.loginUser != null}">
+            <div class="user-info">
+                <span class="avatar" th:text="${#strings.substring(session.loginUser.username, 0, 1)}">U</span>
+                <span class="username" th:text="${session.loginUser.username}">用户</span>
+            </div>
+            <a th:if="${session.loginUser.role == 'admin'}" th:href="@{/admin}" class="admin-link">管理面板</a>
+            <a th:href="@{/logout}" class="logout-btn">退出</a>
+        </div>
+        <div class="user-area" th:unless="${session.loginUser != null}">
+            <a th:href="@{/login}" class="login-link">登录</a>
+            <a th:href="@{/register}" class="register-link">注册</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card post-form">
+        <h2>发布新帖子</h2>
+        <form th:action="@{/post}" method="post">
+            <div><label>选择栏目：</label><select name="categoryId" required>
+                <option value="">请选择栏目</option>
+                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+            </select></div>
+            <div><label>标题：</label><input type="text" name="title" required></div>
+            <div class="form-group">
+                <label>内容 (支持 Markdown)：</label>
+                <textarea name="content" rows="10" required placeholder="支持 **粗体** *斜体* [链接](url) # 标题"></textarea>
+                <small style="color: #88aaff;">支持 Markdown 语法：**粗体** *斜体* [链接](url) # 标题</small>
+            </div>
+            <button type="submit">发布帖子</button>
+        </form>
+        <div th:if="${error}" class="error" th:text="${error}"></div>
+        <div th:if="${success}" class="success" th:text="${success}"></div>
+    </div>
+</div>
+</body>
+</html>
