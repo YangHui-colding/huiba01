@@ -37,6 +37,7 @@ public class User {
         this.password = password;
         this.createAt = LocalDateTime.now();
     }
+    public User(String username,String password,String email){}
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
     public Long getId() { return id; }
